@@ -4,223 +4,225 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Enrollment Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg:#0a0e14;
-    --panel:#12171f;
-    --panel-2:#161c26;
-    --border:#212933;
-    --ink:#eef2f6;
-    --ink-dim:#7c8896;
-    --ink-faint:#4b5563;
-    --accent:#3ddc97;
-    --accent-2:#5eb1ff;
-    --warn:#ffb347;
-    --danger:#ff6b6b;
-    --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    --bg:#070a10;
+    --bg-2:#0b0f17;
+    --panel:rgba(255,255,255,0.035);
+    --panel-solid:#10141d;
+    --border:rgba(255,255,255,0.08);
+    --border-soft:rgba(255,255,255,0.05);
+    --ink:#f2f5f9;
+    --ink-dim:#8993a4;
+    --ink-faint:#4c5563;
+    --accent:#4ee6a3;
+    --accent-soft:rgba(78,230,163,.14);
+    --violet:#8b7cf7;
+    --blue:#5eb1ff;
+    --amber:#ffb84d;
+    --rose:#ff7a90;
+    --mono: 'JetBrains Mono', monospace;
     --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --display: 'Space Grotesk', var(--sans);
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
     margin:0;
-    background:
-      radial-gradient(1200px 500px at 10% -10%, #131c26 0%, transparent 55%),
-      radial-gradient(900px 400px at 100% 0%, #0f1b18 0%, transparent 50%),
-      var(--bg);
+    background:var(--bg);
     color:var(--ink);
     font-family:var(--sans);
     min-height:100vh;
-    padding:32px 24px 72px;
-    -webkit-font-smoothing:antialiased;
+    position:relative;
+    overflow-x:hidden;
   }
-  .wrap{max-width:1220px;margin:0 auto;}
+
+  /* ambient background */
+  .aurora{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(700px 420px at 12% -8%, rgba(78,230,163,.10), transparent 60%),
+      radial-gradient(600px 380px at 92% 0%, rgba(139,124,247,.10), transparent 55%),
+      radial-gradient(800px 500px at 50% 110%, rgba(94,177,255,.06), transparent 60%);
+    animation:driftBg 18s ease-in-out infinite alternate;
+  }
+  @keyframes driftBg{
+    0%{transform:translateY(0) scale(1);}
+    100%{transform:translateY(-14px) scale(1.02);}
+  }
+  .grain{
+    position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.025;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .wrap{max-width:1240px;margin:0 auto;padding:40px 28px 80px;position:relative;z-index:1;}
 
   /* ---------- header ---------- */
   header{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    flex-wrap:wrap;
-    gap:16px;
-    margin-bottom:30px;
-    padding-bottom:22px;
-    border-bottom:1px solid var(--border);
-    opacity:0;
-    animation:riseIn .6s ease forwards;
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;
+    margin-bottom:34px;padding-bottom:26px;
+    border-bottom:1px solid var(--border-soft);
+    opacity:0;animation:riseIn .7s ease forwards;
   }
   header .eyebrow{
-    font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:.18em;
-    text-transform:uppercase;
-    color:var(--accent);
-    margin:0 0 8px;
-    display:flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 10px;display:flex;align-items:center;gap:9px;
   }
-  .pulse-dot{
-    width:6px;height:6px;border-radius:50%;
-    background:var(--accent);
-    box-shadow:0 0 0 0 rgba(61,220,151,.6);
-    animation:pulse 1.8s infinite;
-  }
+  .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(78,230,163,.6);animation:pulse 1.8s infinite;}
   @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(61,220,151,.55);}
-    70%{box-shadow:0 0 0 8px rgba(61,220,151,0);}
-    100%{box-shadow:0 0 0 0 rgba(61,220,151,0);}
+    0%{box-shadow:0 0 0 0 rgba(78,230,163,.55);}
+    70%{box-shadow:0 0 0 9px rgba(78,230,163,0);}
+    100%{box-shadow:0 0 0 0 rgba(78,230,163,0);}
   }
-  header h1{margin:0;font-size:30px;font-weight:650;letter-spacing:-0.015em;}
-  header .sub{color:var(--ink-dim);font-size:13.5px;margin-top:6px;}
-  .refresh-row{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;color:var(--ink-dim);}
+  header h1{
+    margin:0;font-family:var(--display);font-size:36px;font-weight:650;letter-spacing:-0.02em;
+    background:linear-gradient(180deg, #ffffff, #c7d0dc);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  header .sub{color:var(--ink-dim);font-size:14px;margin-top:8px;max-width:440px;line-height:1.5;}
+  .refresh-row{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;color:var(--ink-dim);}
   #lastUpdated{color:var(--ink);}
   .btn{
     font-family:var(--mono);font-size:12px;
-    background:var(--panel);border:1px solid var(--border);color:var(--ink);
-    padding:9px 16px;border-radius:7px;cursor:pointer;
-    display:inline-flex;align-items:center;gap:8px;
-    transition:border-color .15s ease, background .15s ease, transform .15s ease;
+    background:var(--panel);backdrop-filter:blur(12px);
+    border:1px solid var(--border);color:var(--ink);
+    padding:10px 18px;border-radius:9px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:9px;
+    transition:border-color .18s ease, background .18s ease, transform .15s ease;
   }
-  .btn:hover{border-color:#2f7a5c;background:#182130;}
-  .btn:active{transform:scale(.97);}
+  .btn:hover{border-color:rgba(78,230,163,.4);background:rgba(78,230,163,.06);}
+  .btn:active{transform:scale(.96);}
   .btn svg{width:13px;height:13px;transition:transform .5s ease;}
   .btn.spinning svg{animation:spin .7s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
 
-  @keyframes riseIn{
-    from{opacity:0;transform:translateY(-8px);}
-    to{opacity:1;transform:translateY(0);}
-  }
-  @keyframes fadeUp{
-    from{opacity:0;transform:translateY(16px);}
-    to{opacity:1;transform:translateY(0);}
-  }
+  @keyframes riseIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 
   /* ---------- KPI strip ---------- */
-  .kpis{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:14px;
-    margin-bottom:22px;
-  }
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
   .kpi{
-    background:linear-gradient(180deg, var(--panel-2), var(--panel));
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:18px 20px;
-    position:relative;
-    overflow:hidden;
-    opacity:0;
-    animation:fadeUp .55s ease forwards;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);border-radius:16px;
+    padding:20px 22px;position:relative;overflow:hidden;
+    opacity:0;animation:fadeUp .6s ease forwards;
+    transition:border-color .2s ease, transform .2s ease;
   }
+  .kpi:hover{border-color:rgba(255,255,255,.16);transform:translateY(-2px);}
   .kpi::after{
-    content:"";
-    position:absolute;right:-30px;top:-30px;
-    width:90px;height:90px;border-radius:50%;
-    background:radial-gradient(circle, var(--kpi-glow, rgba(61,220,151,.16)), transparent 70%);
+    content:"";position:absolute;right:-40px;top:-40px;width:110px;height:110px;border-radius:50%;
+    background:radial-gradient(circle, var(--kpi-glow, var(--accent-soft)), transparent 70%);
   }
-  .kpi .lbl{font-size:11.5px;color:var(--ink-dim);letter-spacing:.04em;margin-bottom:8px;}
-  .kpi .num{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--ink);line-height:1;}
-  .kpi .num span{color:var(--kpi-accent, var(--accent));}
-  .kpi .foot{font-size:11px;color:var(--ink-faint);margin-top:8px;font-family:var(--mono);}
+  .kpi .lbl{font-size:11.5px;color:var(--ink-dim);letter-spacing:.05em;margin-bottom:10px;}
+  .kpi .num{font-family:var(--display);font-size:30px;font-weight:700;color:var(--ink);line-height:1;}
+  .kpi .foot{font-size:11px;color:var(--ink-faint);margin-top:9px;font-family:var(--mono);}
 
   /* ---------- charts row ---------- */
-  .charts-row{
-    display:grid;
-    grid-template-columns:1.4fr 1fr;
-    gap:14px;
-    margin-bottom:28px;
-  }
+  .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:30px;}
   .panel{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:20px 22px;
-    opacity:0;
-    animation:fadeUp .55s ease forwards;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);border-radius:16px;
+    padding:22px 24px;opacity:0;animation:fadeUp .6s ease forwards;
   }
-  .panel h2{
-    margin:0 0 4px;
-    font-size:13.5px;
-    font-weight:600;
-    letter-spacing:.01em;
-  }
-  .panel .panel-sub{font-size:11.5px;color:var(--ink-dim);margin-bottom:16px;}
+  .panel h2{margin:0 0 4px;font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-0.005em;}
+  .panel .panel-sub{font-size:11.5px;color:var(--ink-dim);margin-bottom:18px;}
   .chart-box{position:relative;height:220px;}
-  .donut-wrap{display:flex;align-items:center;gap:20px;}
-  .donut-legend{flex:1;display:flex;flex-direction:column;gap:10px;}
-  .legend-item{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-dim);}
+  .donut-wrap{display:flex;align-items:center;gap:22px;}
+  .donut-legend{flex:1;display:flex;flex-direction:column;gap:11px;}
+  .legend-item{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-dim);}
   .legend-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
   .legend-item b{color:var(--ink);font-family:var(--mono);margin-left:auto;}
 
-  /* ---------- grid of tech cards ---------- */
-  .section-head{
-    display:flex;justify-content:space-between;align-items:center;
-    margin-bottom:14px;
+  /* ---------- course tabs ---------- */
+  .course-tabs{
+    display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;
+    opacity:0;animation:fadeUp .6s ease forwards;
   }
-  .section-head h2{font-size:15px;margin:0;font-weight:650;}
+  .course-tab{
+    font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);
+    background:var(--panel);backdrop-filter:blur(12px);
+    border:1px solid var(--border);padding:10px 18px;border-radius:10px;
+    cursor:pointer;display:flex;align-items:center;gap:9px;
+    transition:border-color .18s ease, background .18s ease, color .18s ease, transform .15s ease;
+  }
+  .course-tab:hover{border-color:rgba(255,255,255,.2);color:var(--ink);}
+  .course-tab:active{transform:scale(.97);}
+  .course-tab .tab-pill{
+    font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.06);
+    padding:2px 7px;border-radius:20px;color:var(--ink-faint);
+  }
+  .course-tab.active{
+    color:var(--ink);border-color:var(--tab-accent, var(--accent));
+    background:color-mix(in srgb, var(--tab-accent, var(--accent)) 10%, transparent);
+  }
+  .course-tab.active .tab-pill{
+    background:color-mix(in srgb, var(--tab-accent, var(--accent)) 22%, transparent);
+    color:var(--ink);
+  }
+
+  /* ---------- grid of tech cards ---------- */
+  .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .section-head h2{font-family:var(--display);font-size:17px;margin:0;font-weight:650;}
   .section-head .count-pill{
     font-family:var(--mono);font-size:11px;color:var(--ink-dim);
-    background:var(--panel-2);border:1px solid var(--border);
-    padding:3px 10px;border-radius:20px;
+    background:var(--panel);border:1px solid var(--border);padding:4px 12px;border-radius:20px;
   }
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
-    gap:16px;
-  }
+  .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:16px;}
   .card{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:13px;
-    padding:20px;
-    position:relative;
-    overflow:hidden;
-    opacity:0;
-    transform:translateY(14px);
-    animation:fadeUp .5s ease forwards;
-    transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);border-radius:16px;padding:22px;
+    position:relative;overflow:hidden;
+    opacity:0;transform:translateY(16px);animation:fadeUp .55s ease forwards;
+    transition:border-color .22s ease, transform .22s ease, box-shadow .22s ease;
   }
   .card:hover{
-    border-color:#2c394a;
-    transform:translateY(-3px);
-    box-shadow:0 10px 30px -12px rgba(0,0,0,.5);
+    border-color:rgba(255,255,255,.18);transform:translateY(-4px);
+    box-shadow:0 16px 40px -16px rgba(0,0,0,.6);
   }
   .card::before{
     content:"";position:absolute;top:0;left:0;right:0;height:2px;
-    background:var(--card-accent, var(--accent));opacity:.9;
+    background:linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
+    opacity:.9;
   }
-  .card-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .card::after{
+    content:"";position:absolute;right:-50px;bottom:-50px;width:130px;height:130px;border-radius:50%;
+    background:radial-gradient(circle, color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent), transparent 70%);
+    pointer-events:none;
+  }
+  .card-head{display:flex;align-items:center;gap:13px;margin-bottom:18px;}
   .icon-box{
-    width:44px;height:44px;border-radius:10px;
-    background:#0c1119;border:1px solid var(--border);
+    width:46px;height:46px;border-radius:12px;
+    background:rgba(255,255,255,.03);border:1px solid var(--border);
     display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;
   }
   .icon-box img{width:26px;height:26px;object-fit:contain;}
   .icon-box .fallback{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--card-accent, var(--accent));}
-  .card-head h3{margin:0;font-size:15px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .card-head .tid{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-top:2px;}
+  .card-head h3{margin:0;font-family:var(--display);font-size:15.5px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-head .tid{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-top:3px;}
 
-  .seat-row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:12px;color:var(--ink-dim);margin-bottom:7px;}
-  .seat-row b{color:var(--ink);font-size:13px;}
-  .bar-track{height:7px;border-radius:5px;background:#0c1119;border:1px solid var(--border);overflow:hidden;margin-bottom:18px;}
-  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg, var(--card-accent, var(--accent)), color-mix(in srgb, var(--card-accent, var(--accent)) 60%, white));width:0%;transition:width 1s cubic-bezier(.4,0,.2,1);}
+  .seat-row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:12px;color:var(--ink-dim);margin-bottom:8px;}
+  .seat-row b{color:var(--ink);font-size:13.5px;}
+  .bar-track{height:7px;border-radius:5px;background:rgba(255,255,255,.04);border:1px solid var(--border-soft);overflow:hidden;margin-bottom:20px;}
+  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg, var(--card-accent, var(--accent)), color-mix(in srgb, var(--card-accent, var(--accent)) 55%, white));width:0%;transition:width 1.1s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px -2px var(--card-accent, var(--accent));}
 
   .terms{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  .term{background:#0c1119;border:1px solid var(--border);border-radius:7px;padding:8px 6px;text-align:center;transition:border-color .3s ease;}
-  .term.paid{border-color:var(--card-accent, var(--accent));}
+  .term{background:rgba(255,255,255,.02);border:1px solid var(--border-soft);border-radius:9px;padding:9px 6px;text-align:center;transition:border-color .3s ease, background .3s ease;}
+  .term.paid{border-color:var(--card-accent, var(--accent));background:color-mix(in srgb, var(--card-accent, var(--accent)) 8%, transparent);}
   .term .t-lbl{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
   .term .t-dot{width:7px;height:7px;border-radius:50%;margin:6px auto 0;background:#2b3644;transition:all .3s ease;}
-  .term.paid .t-dot{background:var(--card-accent, var(--accent));box-shadow:0 0 8px var(--card-accent, var(--accent));}
+  .term.paid .t-dot{background:var(--card-accent, var(--accent));box-shadow:0 0 9px var(--card-accent, var(--accent));}
 
   /* ---------- states ---------- */
-  .state-box{text-align:center;padding:60px 20px;color:var(--ink-dim);font-family:var(--mono);font-size:13px;}
-  .state-box.error{color:var(--danger);}
-  .skeleton{background:var(--panel);border:1px solid var(--border);border-radius:13px;height:186px;position:relative;overflow:hidden;}
+  .state-box{text-align:center;padding:70px 20px;color:var(--ink-dim);font-family:var(--mono);font-size:13px;}
+  .state-box.error{color:var(--rose);}
+  .skeleton{background:var(--panel);border:1px solid var(--border);border-radius:16px;height:196px;position:relative;overflow:hidden;}
   .skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent);animation:shimmer 1.4s infinite;}
   @keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
 
-  footer{margin-top:38px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint);}
+  footer{margin-top:44px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint);}
 
   @media (max-width:900px){
     .kpis{grid-template-columns:repeat(2,1fr);}
@@ -229,10 +231,13 @@
   @media (max-width:640px){
     .kpis{grid-template-columns:repeat(2,1fr);}
     header{align-items:flex-start;}
+    header h1{font-size:28px;}
   }
 </style>
 </head>
 <body>
+<div class="aurora"></div>
+<div class="grain"></div>
 <div class="wrap">
 
   <header>
@@ -249,6 +254,8 @@
       </button>
     </div>
   </header>
+
+  <div class="course-tabs" id="courseTabs"></div>
 
   <div class="kpis" id="kpis"></div>
 
@@ -279,34 +286,39 @@
     </div>
   </div>
 
-  <footer>technology-dashboard · configure API_URL below to go live</footer>
+  <footer>technology-dashboard · configure API_URL and COURSE_IDS below to go live</footer>
 </div>
 
 <script>
 /* =========================================================================
-   CONFIG — replace these two values with your real endpoint + icon host.
+   CONFIG — replace these with your real endpoint, icon host, and course ids.
    ========================================================================= */
 const API_URL = "https://api.maya.adityauniversity.in/node/api/course-payment-analytics";     // <-- your live API endpoint
 const ICON_BASE_URL = (id) => `https://api.maya.adityauniversity.in/node/technology-icons/${id}`; // <-- base URL technology_icon filenames resolve against
+const COURSE_IDS = [
+  "66487408f07c5f0f567ee3c3",
+  "664874zzzzzzzzzzzzzzz11"   // <-- add as many course ids as you need here
+];
+/* ========================================================================= */
 /* ========================================================================= */
 
-const ACCENTS = ["#3ddc97", "#5eb1ff", "#ffb347", "#c792ea", "#ff6b6b", "#4ecdc4"];
+const ACCENTS = ["#4ee6a3", "#5eb1ff", "#ffb84d", "#8b7cf7", "#ff7a90", "#4ecdc4"];
 let barChart = null, donutChart = null;
+let courseData = [];      // [{course_id, course_name, technologies:[...]}, ...]
+let activeCourseIdx = 0;
 
 function initials(name){
   return name.replace(/_\d{4}$/, "").split(/[\s&]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 }
 
-/* animated count-up for KPI numbers */
 function animateCount(el, target, opts={}){
-  const dur = opts.duration || 900;
+  const dur = opts.duration || 950;
   const isPct = !!opts.percent;
-  const start = 0;
   const t0 = performance.now();
   function tick(now){
     const p = Math.min(1, (now - t0) / dur);
     const eased = 1 - Math.pow(1 - p, 3);
-    const val = Math.round(start + (target - start) * eased);
+    const val = Math.round(target * eased);
     el.textContent = isPct ? val + "%" : val.toLocaleString();
     if(p < 1) requestAnimationFrame(tick);
   }
@@ -320,23 +332,22 @@ function renderKPIs(rows){
   const openSeats = totalSeats - totalPaid;
 
   const kpiDefs = [
-    { lbl:"Technologies", val: rows.length, accent:"var(--accent-2)", glow:"rgba(94,177,255,.16)", foot: rows.length + " active cohorts" },
-    { lbl:"Total Seats", val: totalSeats, accent:"var(--accent)", glow:"rgba(61,220,151,.16)", foot: "across all batches" },
-    { lbl:"Students Paid", val: totalPaid, accent:"var(--warn)", glow:"rgba(255,179,71,.16)", foot: openSeats + " seats remaining" },
-    { lbl:"Avg. Fill Rate", val: avgFill, accent:"var(--accent)", glow:"rgba(61,220,151,.16)", foot: "of total capacity", percent:true },
+    { lbl:"Technologies", val: rows.length, glow:"rgba(94,177,255,.18)", foot: rows.length + " active cohorts" },
+    { lbl:"Total Seats", val: totalSeats, glow:"rgba(78,230,163,.18)", foot: "across all batches" },
+    { lbl:"Students Paid", val: totalPaid, glow:"rgba(255,184,77,.18)", foot: openSeats + " seats remaining" },
+    { lbl:"Avg. Fill Rate", val: avgFill, glow:"rgba(139,124,247,.18)", foot: "of total capacity", percent:true },
   ];
 
   const kpis = document.getElementById("kpis");
   kpis.innerHTML = kpiDefs.map((k,i)=>`
-    <div class="kpi" style="--kpi-accent:${k.accent};--kpi-glow:${k.glow};animation-delay:${i*0.06}s">
+    <div class="kpi" style="--kpi-glow:${k.glow};animation-delay:${i*0.07}s">
       <div class="lbl">${k.lbl}</div>
-      <div class="num" id="kpi-${i}"><span>0</span></div>
+      <div class="num" id="kpi-${i}">0</div>
       <div class="foot">${k.foot}</div>
     </div>`).join("");
 
   kpiDefs.forEach((k,i)=>{
-    const el = document.querySelector(`#kpi-${i} span`);
-    animateCount(el, k.val, { percent: !!k.percent });
+    animateCount(document.getElementById(`kpi-${i}`), k.val, { percent: !!k.percent });
   });
 }
 
@@ -356,17 +367,17 @@ function renderCharts(rows){
     data: {
       labels,
       datasets: [
-        { label:"Seats", data:seatData, backgroundColor:"#1c2530", borderRadius:5, barThickness:16 },
-        { label:"Paid", data:paidData, backgroundColor:colors, borderRadius:5, barThickness:16 },
+        { label:"Seats", data:seatData, backgroundColor:"rgba(255,255,255,.06)", borderRadius:6, barThickness:16 },
+        { label:"Paid", data:paidData, backgroundColor:colors, borderRadius:6, barThickness:16 },
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
-      animation:{ duration:900, easing:"easeOutCubic" },
-      plugins:{ legend:{ labels:{ color:"#7c8896", font:{ family:"Inter", size:11 } } } },
+      animation:{ duration:950, easing:"easeOutCubic" },
+      plugins:{ legend:{ labels:{ color:"#8993a4", font:{ family:"Inter", size:11 }, boxWidth:10, boxHeight:10 } } },
       scales:{
-        x:{ ticks:{ color:"#7c8896", font:{ size:10 }, maxRotation:0, autoSkip:true }, grid:{ display:false } },
-        y:{ ticks:{ color:"#7c8896", font:{ size:10 } }, grid:{ color:"#1a222c" }, beginAtZero:true }
+        x:{ ticks:{ color:"#8993a4", font:{ size:10 }, maxRotation:0, autoSkip:true }, grid:{ display:false } },
+        y:{ ticks:{ color:"#8993a4", font:{ size:10 } }, grid:{ color:"rgba(255,255,255,.05)" }, beginAtZero:true }
       }
     }
   });
@@ -380,20 +391,20 @@ function renderCharts(rows){
     type:"doughnut",
     data:{
       labels:["Paid", "Remaining"],
-      datasets:[{ data:[totalPaid, remaining], backgroundColor:["#3ddc97", "#1c2530"], borderWidth:0, hoverOffset:4 }]
+      datasets:[{ data:[totalPaid, remaining], backgroundColor:["#4ee6a3", "rgba(255,255,255,.06)"], borderWidth:0, hoverOffset:4 }]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
       cutout:"72%",
-      animation:{ duration:1000, easing:"easeOutCubic" },
+      animation:{ duration:1050, easing:"easeOutCubic" },
       plugins:{ legend:{ display:false } }
     }
   });
 
   document.getElementById("donutLegend").innerHTML = `
-    <div class="legend-item"><span class="legend-dot" style="background:#3ddc97"></span>Paid<b>${totalPaid}</b></div>
-    <div class="legend-item"><span class="legend-dot" style="background:#1c2530"></span>Remaining<b>${remaining}</b></div>
-    <div class="legend-item" style="margin-top:4px;border-top:1px solid var(--border);padding-top:10px;">Total capacity<b>${totalSeats}</b></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#4ee6a3"></span>Paid<b>${totalPaid}</b></div>
+    <div class="legend-item"><span class="legend-dot" style="background:rgba(255,255,255,.2)"></span>Remaining<b>${remaining}</b></div>
+    <div class="legend-item" style="margin-top:5px;border-top:1px solid var(--border-soft);padding-top:11px;">Total capacity<b>${totalSeats}</b></div>
   `;
 }
 
@@ -412,7 +423,7 @@ function cardHTML(tech, idx){
   }).join("");
 
   return `
-  <div class="card" style="--card-accent:${accent};animation-delay:${idx*0.07}s">
+  <div class="card" style="--card-accent:${accent};animation-delay:${idx*0.08}s">
     <div class="card-head">
       <div class="icon-box">
         ${iconUrl
@@ -442,7 +453,6 @@ function renderGrid(rows){
     return;
   }
   content.innerHTML = `<div class="grid">${rows.map((r,i)=>cardHTML(r,i)).join("")}</div>`;
-  // trigger bar-fill animation after paint
   requestAnimationFrame(()=>{
     document.querySelectorAll(".bar-fill").forEach(el=>{
       const pct = el.getAttribute("data-fill");
@@ -451,10 +461,41 @@ function renderGrid(rows){
   });
 }
 
+function renderTabs(){
+  const tabsEl = document.getElementById("courseTabs");
+  if(!courseData.length){ tabsEl.innerHTML = ""; return; }
+
+  tabsEl.innerHTML = courseData.map((c, i) => {
+    const accent = ACCENTS[i % ACCENTS.length];
+    const label = c.course_name || `Course ${c.course_id.slice(0,8)}…`;
+    const seatCount = (c.technologies || []).reduce((s,t)=>s+(t.total_students_paid||0),0);
+    return `
+      <div class="course-tab ${i === activeCourseIdx ? "active" : ""}" style="--tab-accent:${accent}" onclick="switchCourse(${i})">
+        ${label}
+        <span class="tab-pill">${seatCount} paid</span>
+      </div>`;
+  }).join("");
+}
+
+function switchCourse(idx){
+  activeCourseIdx = idx;
+  renderTabs();
+  renderActiveCourse();
+}
+
+function renderActiveCourse(){
+  const course = courseData[activeCourseIdx];
+  const rows = course ? (course.technologies || []) : [];
+  renderKPIs(rows);
+  renderCharts(rows);
+  renderGrid(rows);
+}
+
 function renderSkeleton(){
   document.getElementById("content").innerHTML = `<div class="grid">${"<div class='skeleton'></div>".repeat(6)}</div>`;
   document.getElementById("kpis").innerHTML = "";
   document.getElementById("chartsRow").style.display = "none";
+  document.getElementById("courseTabs").innerHTML = "";
 }
 
 function renderError(msg){
@@ -462,6 +503,9 @@ function renderError(msg){
     <div class="state-box error">Couldn't load data — ${msg}<br><br>
     <span style="color:var(--ink-dim)">Check that API_URL is set correctly and reachable from the browser (CORS enabled).</span>
     </div>`;
+  document.getElementById("courseTabs").innerHTML = "";
+  document.getElementById("kpis").innerHTML = "";
+  document.getElementById("chartsRow").style.display = "none";
 }
 
 async function loadData(){
@@ -469,13 +513,24 @@ async function loadData(){
   btn.classList.add("spinning");
   renderSkeleton();
   try{
-    const res = await fetch(API_URL, { headers: { "Accept": "application/json" } });
+    const url = `${API_URL}?course_ids=${COURSE_IDS.join(",")}`;
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
-    const rows = json.data || [];
-    renderKPIs(rows);
-    renderCharts(rows);
-    renderGrid(rows);
+
+    // Supports the new multi-course response { data: [{course_id, course_name, technologies:[...]}] }
+    // and falls back gracefully to the old flat single-course shape { data: [...] }.
+    const raw = json.data || [];
+    if(raw.length && Array.isArray(raw[0].technologies)){
+      courseData = raw;
+    } else {
+      courseData = [{ course_id: COURSE_IDS[0] || "course", course_name: null, technologies: raw }];
+    }
+
+    if(activeCourseIdx >= courseData.length) activeCourseIdx = 0;
+
+    renderTabs();
+    renderActiveCourse();
     document.getElementById("lastUpdated").textContent = new Date().toLocaleTimeString();
   }catch(err){
     console.error(err);
