@@ -1,555 +1,1227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enrollment Analytics</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Course Payment Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
-  :root{
-    --bg:#070a10;
-    --bg-2:#0b0f17;
-    --panel:rgba(255,255,255,0.035);
-    --panel-solid:#10141d;
-    --border:rgba(255,255,255,0.08);
-    --border-soft:rgba(255,255,255,0.05);
-    --ink:#f2f5f9;
-    --ink-dim:#8993a4;
-    --ink-faint:#4c5563;
-    --accent:#4ee6a3;
-    --accent-soft:rgba(78,230,163,.14);
-    --violet:#8b7cf7;
-    --blue:#5eb1ff;
-    --amber:#ffb84d;
-    --rose:#ff7a90;
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --display: 'Space Grotesk', var(--sans);
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--ink);
-    font-family:var(--sans);
-    min-height:100vh;
-    position:relative;
-    overflow-x:hidden;
-  }
+/* =========================================================================
+   DESIGN TOKENS — light paper ledger
+   ========================================================================= */
+*{box-sizing:border-box;}
+body{margin:0;}
 
-  /* ambient background */
-  .aurora{
-    position:fixed;inset:0;z-index:0;pointer-events:none;
-    background:
-      radial-gradient(700px 420px at 12% -8%, rgba(78,230,163,.10), transparent 60%),
-      radial-gradient(600px 380px at 92% 0%, rgba(139,124,247,.10), transparent 55%),
-      radial-gradient(800px 500px at 50% 110%, rgba(94,177,255,.06), transparent 60%);
-    animation:driftBg 18s ease-in-out infinite alternate;
-  }
-  @keyframes driftBg{
-    0%{transform:translateY(0) scale(1);}
-    100%{transform:translateY(-14px) scale(1.02);}
-  }
-  .grain{
-    position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.025;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
+.ea-root{
+  --bg:#fcfcfc;
+  --bg-raised:#fdfcf8;
+  --ink:#1b1f1c;
+  --ink-dim:rgba(27,31,28,.66);
+  --ink-faint:rgba(27,31,28,.42);
+  --line:rgba(27,31,28,.14);
+  --line-soft:rgba(27,31,28,.08);
+  --brass:#a9822c;
+  --brass-soft:rgba(169,130,44,.12);
+  --rust:#a14b34;
+  --sage:#4f7d6c;
+  --serif:'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  .wrap{max-width:1240px;margin:0 auto;padding:40px 28px 80px;position:relative;z-index:1;}
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+  font-variant-numeric:tabular-nums;
+}
 
-  /* ---------- header ---------- */
-  header{
-    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;
-    margin-bottom:34px;padding-bottom:26px;
-    border-bottom:1px solid var(--border-soft);
-    opacity:0;animation:riseIn .7s ease forwards;
-  }
-  header .eyebrow{
-    font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
-    color:var(--accent);margin:0 0 10px;display:flex;align-items:center;gap:9px;
-  }
-  .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(78,230,163,.6);animation:pulse 1.8s infinite;}
-  @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(78,230,163,.55);}
-    70%{box-shadow:0 0 0 9px rgba(78,230,163,0);}
-    100%{box-shadow:0 0 0 0 rgba(78,230,163,0);}
-  }
-  header h1{
-    margin:0;font-family:var(--display);font-size:36px;font-weight:650;letter-spacing:-0.02em;
-    background:linear-gradient(180deg, #ffffff, #c7d0dc);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-  }
-  header .sub{color:var(--ink-dim);font-size:14px;margin-top:8px;max-width:440px;line-height:1.5;}
-  .refresh-row{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;color:var(--ink-dim);}
-  #lastUpdated{color:var(--ink);}
-  .btn{
-    font-family:var(--mono);font-size:12px;
-    background:var(--panel);backdrop-filter:blur(12px);
-    border:1px solid var(--border);color:var(--ink);
-    padding:10px 18px;border-radius:9px;cursor:pointer;
-    display:inline-flex;align-items:center;gap:9px;
-    transition:border-color .18s ease, background .18s ease, transform .15s ease;
-  }
-  .btn:hover{border-color:rgba(78,230,163,.4);background:rgba(78,230,163,.06);}
-  .btn:active{transform:scale(.96);}
-  .btn svg{width:13px;height:13px;transition:transform .5s ease;}
-  .btn.spinning svg{animation:spin .7s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg);}}
+.ea-root .ledger-lines{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(
+    to bottom, transparent 0, transparent 35px, rgba(27,31,28,.025) 36px
+  );
+}
 
-  @keyframes riseIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.ea-root .wrap{max-width:1220px;margin:0 auto;padding:52px 28px 90px;position:relative;z-index:1;}
 
-  /* ---------- KPI strip ---------- */
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
-  .kpi{
-    background:var(--panel);backdrop-filter:blur(14px);
-    border:1px solid var(--border);border-radius:16px;
-    padding:20px 22px;position:relative;overflow:hidden;
-    opacity:0;animation:fadeUp .6s ease forwards;
-    transition:border-color .2s ease, transform .2s ease;
-  }
-  .kpi:hover{border-color:rgba(255,255,255,.16);transform:translateY(-2px);}
-  .kpi::after{
-    content:"";position:absolute;right:-40px;top:-40px;width:110px;height:110px;border-radius:50%;
-    background:radial-gradient(circle, var(--kpi-glow, var(--accent-soft)), transparent 70%);
-  }
-  .kpi .lbl{font-size:11.5px;color:var(--ink-dim);letter-spacing:.05em;margin-bottom:10px;}
-  .kpi .num{font-family:var(--display);font-size:30px;font-weight:700;color:var(--ink);line-height:1;}
-  .kpi .foot{font-size:11px;color:var(--ink-faint);margin-top:9px;font-family:var(--mono);}
+/* ---------- header ---------- */
+.ea-root header{
+  display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;
+  margin-bottom:38px;padding-bottom:28px;border-bottom:1px solid var(--line);
+}
+.ea-root .eyebrow{
+  font-family:var(--sans);font-size:12px;letter-spacing:.02em;
+  color:var(--brass);margin:0 0 14px;display:flex;align-items:center;gap:8px;font-weight:600;
+}
+.ea-root .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--brass);position:relative;flex-shrink:0;}
+.ea-root .pulse-dot::after{
+  content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--brass);
+  opacity:0;animation:pulseRing 2.4s ease-out infinite;
+}
+@keyframes pulseRing{0%{opacity:.5;transform:scale(.6);}100%{opacity:0;transform:scale(1.9);}}
+.ea-root header h1{
+  margin:0;font-family:var(--serif);font-size:38px;font-weight:600;letter-spacing:-0.01em;
+  color:var(--ink);line-height:1.1;
+}
+.ea-root header .sub{color:var(--ink-dim);font-size:14.5px;margin-top:10px;max-width:480px;line-height:1.55;}
+.ea-root .course-badge{
+  margin-top:16px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-family:var(--sans);font-size:12.5px;color:var(--ink-dim);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 0;
+}
+.ea-root .course-badge b{color:var(--brass);font-weight:700;font-size:14px;}
+.ea-root .refresh-row{display:flex;align-items:center;gap:16px;font-size:12.5px;color:var(--ink-faint);}
+.ea-root .refresh-row #lastUpdated{color:var(--ink);font-weight:500;}
+.ea-root .btn{
+  font-family:var(--sans);font-size:12.5px;font-weight:600;background:var(--bg-raised);
+  border:1px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:3px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:9px;transition:border-color .18s ease, background .18s ease;
+}
+.ea-root .btn:hover{border-color:var(--brass);background:var(--brass-soft);}
+.ea-root .btn:disabled{cursor:not-allowed;opacity:.55;}
+.ea-root .btn svg{width:13px;height:13px;}
+.ea-root .btn.spinning svg{animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-  /* ---------- charts row ---------- */
-  .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:30px;}
-  .panel{
-    background:var(--panel);backdrop-filter:blur(14px);
-    border:1px solid var(--border);border-radius:16px;
-    padding:22px 24px;opacity:0;animation:fadeUp .6s ease forwards;
-  }
-  .panel h2{margin:0 0 4px;font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-0.005em;}
-  .panel .panel-sub{font-size:11.5px;color:var(--ink-dim);margin-bottom:18px;}
-  .chart-box{position:relative;height:220px;}
-  .donut-wrap{display:flex;align-items:center;gap:22px;}
-  .donut-legend{flex:1;display:flex;flex-direction:column;gap:11px;}
-  .legend-item{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-dim);}
-  .legend-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
-  .legend-item b{color:var(--ink);font-family:var(--mono);margin-left:auto;}
+/* ---------- KPI strip ---------- */
+.ea-root .kpis{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  border:1px solid var(--line);border-radius:4px;margin-bottom:24px;overflow:hidden;background:var(--bg-raised);
+}
+.ea-root .kpi{padding:20px 22px;border-left:1px solid var(--line);}
+.ea-root .kpi:first-child{border-left:none;}
+.ea-root .kpi .lbl{font-size:12px;color:var(--ink-faint);margin-bottom:10px;}
+.ea-root .kpi .num{font-family:var(--serif);font-size:28px;font-weight:600;color:var(--ink);line-height:1;}
+.ea-root .kpi .foot{font-size:11.5px;color:var(--ink-faint);margin-top:9px;}
 
-  /* ---------- course tabs ---------- */
-  .course-tabs{
-    display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;
-    opacity:0;animation:fadeUp .6s ease forwards;
-  }
-  .course-tab{
-    font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);
-    background:var(--panel);backdrop-filter:blur(12px);
-    border:1px solid var(--border);padding:10px 18px;border-radius:10px;
-    cursor:pointer;display:flex;align-items:center;gap:9px;
-    transition:border-color .18s ease, background .18s ease, color .18s ease, transform .15s ease;
-  }
-  .course-tab:hover{border-color:rgba(255,255,255,.2);color:var(--ink);}
-  .course-tab:active{transform:scale(.97);}
-  .course-tab .tab-pill{
-    font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.06);
-    padding:2px 7px;border-radius:20px;color:var(--ink-faint);
-  }
-  .course-tab.active{
-    color:var(--ink);border-color:var(--tab-accent, var(--accent));
-    background:color-mix(in srgb, var(--tab-accent, var(--accent)) 10%, transparent);
-  }
-  .course-tab.active .tab-pill{
-    background:color-mix(in srgb, var(--tab-accent, var(--accent)) 22%, transparent);
-    color:var(--ink);
-  }
+/* ---------- charts row ---------- */
+.ea-root .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px;}
+.ea-root .panel{background:var(--bg-raised);border:1px solid var(--line);border-radius:4px;padding:24px 26px;}
+.ea-root .panel h2{margin:0 0 4px;font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink);}
+.ea-root .panel .panel-sub{font-size:12px;color:var(--ink-faint);margin-bottom:20px;}
+.ea-root .panel-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:20px;flex-wrap:wrap;}
+.ea-root .panel-header-row h2{margin-bottom:4px;}
+.ea-root .panel-header-row .panel-sub{margin-bottom:0;}
+.ea-root .chart-box{position:relative;height:220px;}
+.ea-root .donut-wrap{display:flex;align-items:center;gap:24px;}
+.ea-root .donut-legend{flex:1;display:flex;flex-direction:column;gap:12px;}
+.ea-root .legend-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-dim);}
+.ea-root .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.ea-root .legend-item b{color:var(--ink);font-weight:600;margin-left:auto;}
+.ea-root .legend-total{margin-top:6px;border-top:1px solid var(--line);padding-top:12px;}
 
-  /* ---------- grid of tech cards ---------- */
-  .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-  .section-head h2{font-family:var(--display);font-size:17px;margin:0;font-weight:650;}
-  .section-head .count-pill{
-    font-family:var(--mono);font-size:11px;color:var(--ink-dim);
-    background:var(--panel);border:1px solid var(--border);padding:4px 12px;border-radius:20px;
-  }
-  .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:16px;}
-  .card{
-    background:var(--panel);backdrop-filter:blur(14px);
-    border:1px solid var(--border);border-radius:16px;padding:22px;
-    position:relative;overflow:hidden;
-    opacity:0;transform:translateY(16px);animation:fadeUp .55s ease forwards;
-    transition:border-color .22s ease, transform .22s ease, box-shadow .22s ease;
-  }
-  .card:hover{
-    border-color:rgba(255,255,255,.18);transform:translateY(-4px);
-    box-shadow:0 16px 40px -16px rgba(0,0,0,.6);
-  }
-  .card::before{
-    content:"";position:absolute;top:0;left:0;right:0;height:2px;
-    background:linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
-    opacity:.9;
-  }
-  .card::after{
-    content:"";position:absolute;right:-50px;bottom:-50px;width:130px;height:130px;border-radius:50%;
-    background:radial-gradient(circle, color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent), transparent 70%);
-    pointer-events:none;
-  }
-  .card-head{display:flex;align-items:center;gap:13px;margin-bottom:18px;}
-  .icon-box{
-    width:46px;height:46px;border-radius:12px;
-    background:rgba(255,255,255,.03);border:1px solid var(--border);
-    display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;
-  }
-  .icon-box img{width:26px;height:26px;object-fit:contain;}
-  .icon-box .fallback{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--card-accent, var(--accent));}
-  .card-head h3{margin:0;font-family:var(--display);font-size:15.5px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .card-head .tid{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-top:3px;}
+/* ---------- term / course selector ---------- */
+.ea-root .term-selector{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  background:var(--bg-raised);border:1px solid var(--line);border-radius:4px;padding:16px 22px;margin-bottom:16px;
+}
+.ea-root .term-selector-label{display:flex;align-items:center;gap:13px;}
+.ea-root .term-selector-icon{
+  width:32px;height:32px;border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:var(--serif);font-weight:600;font-size:14px;
+  background:var(--brass-soft);color:var(--brass);border:1px solid var(--line);
+}
+.ea-root .term-selector-title{font-size:13.5px;font-weight:600;color:var(--ink);}
+.ea-root .term-selector-sub{font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
+.ea-root .term-buttons{display:flex;gap:8px;flex-wrap:wrap;}
+.ea-root .term-button{
+  font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--ink-dim);
+  background:var(--bg-raised);border:1px solid var(--line);padding:8px 15px;border-radius:3px;cursor:pointer;
+  transition:border-color .15s ease, color .15s ease, background .15s ease;
+}
+.ea-root .term-button:hover{border-color:var(--ink-faint);color:var(--ink);}
+.ea-root .term-button.active{color:#fff;background:var(--brass);border-color:var(--brass);}
+.ea-root .course-selector-control{display:flex;align-items:center;}
+.ea-root .course-select{
+  min-width:300px;max-width:100%;padding:9px 34px 9px 13px;border-radius:3px;border:1px solid var(--line);
+  background:var(--bg-raised) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%231b1f1c' fill-opacity='.5'/%3E%3C/svg%3E") no-repeat right 13px center;
+  color:var(--ink);font-family:var(--sans);font-weight:600;font-size:12.5px;outline:none;appearance:none;cursor:pointer;
+}
+.ea-root .course-select:focus-visible{border-color:var(--brass);}
+.ea-root .course-select:disabled{cursor:not-allowed;opacity:.6;}
 
-  .seat-row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:12px;color:var(--ink-dim);margin-bottom:8px;}
-  .seat-row b{color:var(--ink);font-size:13.5px;}
-  .bar-track{height:7px;border-radius:5px;background:rgba(255,255,255,.04);border:1px solid var(--border-soft);overflow:hidden;margin-bottom:20px;}
-  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg, var(--card-accent, var(--accent)), color-mix(in srgb, var(--card-accent, var(--accent)) 55%, white));width:0%;transition:width 1.1s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px -2px var(--card-accent, var(--accent));}
+/* ---------- section headers ---------- */
+.ea-root .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.ea-root .section-head-spaced{margin-top:34px;}
+.ea-root .section-head h2{font-family:var(--serif);font-size:18px;margin:0;font-weight:600;color:var(--ink);}
+.ea-root .section-head .count-pill{font-size:11.5px;color:var(--ink-faint);border:1px solid var(--line);padding:5px 13px;border-radius:20px;}
+.ea-root .section-spacer{margin-top:24px;}
 
-  .terms{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  .term{background:rgba(255,255,255,.02);border:1px solid var(--border-soft);border-radius:9px;padding:10px 6px 9px;text-align:center;transition:border-color .3s ease, background .3s ease;}
-  .term.paid{border-color:var(--card-accent, var(--accent));background:color-mix(in srgb, var(--card-accent, var(--accent)) 8%, transparent);}
-  .term .t-lbl{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
-  .term .t-count{font-family:var(--mono);font-size:16px;font-weight:600;color:#2b3644;margin-bottom:3px;transition:color .3s ease;}
-  .term.paid .t-count{color:var(--card-accent, var(--accent));text-shadow:0 0 12px color-mix(in srgb, var(--card-accent, var(--accent)) 55%, transparent);}
+/* ---------- technology ledger rows ---------- */
+.ea-root .grid{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+.ea-root .card{
+  background:var(--bg-raised);border-top:1px solid var(--line);padding:22px 26px;position:relative;
+  display:grid;grid-template-columns:220px 1fr 200px;gap:24px;align-items:center;
+}
+.ea-root .card:first-child{border-top:none;}
+.ea-root .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--card-accent, var(--brass));}
+.ea-root .card-head{display:flex;align-items:center;gap:13px;margin-bottom:0;}
+.ea-root .icon-box{
+  width:42px;height:42px;border-radius:4px;background:var(--bg);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;
+}
+.ea-root .icon-box img{width:24px;height:24px;object-fit:contain;}
+.ea-root .icon-box .fallback{font-family:var(--serif);font-size:14px;font-weight:600;color:var(--card-accent, var(--brass));}
+.ea-root .card-head h3{margin:0;font-family:var(--serif);font-size:15.5px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);}
+.ea-root .card-head .tid{font-size:11px;color:var(--ink-faint);margin-top:3px;}
 
-  /* ---------- states ---------- */
-  .state-box{text-align:center;padding:70px 20px;color:var(--ink-dim);font-family:var(--mono);font-size:13px;}
-  .state-box.error{color:var(--rose);}
-  .skeleton{background:var(--panel);border:1px solid var(--border);border-radius:16px;height:196px;position:relative;overflow:hidden;}
-  .skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent);animation:shimmer 1.4s infinite;}
-  @keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+.ea-root .seat-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--ink-dim);margin-bottom:8px;}
+.ea-root .seat-row b{color:var(--ink);font-size:13.5px;font-weight:600;}
+.ea-root .seat-row .of-tag{font-size:11px;color:var(--ink-faint);font-weight:400;margin-left:5px;}
+.ea-root .bar-track{height:7px;border-radius:4px;background:rgba(27,31,28,.06);overflow:hidden;margin:10px 0;position:relative;}
+.ea-root .bar-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px;width:0%;transition:width 1.1s cubic-bezier(.4,0,.2,1);}
+.ea-root .bar-fill.registered{background:rgba(27,31,28,.14);z-index:1;}
+.ea-root .bar-fill:not(.registered){background:var(--card-accent, var(--brass));z-index:2;}
+.ea-root .meta-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-top:8px;}
+.ea-root .meta-label{color:var(--ink-faint);}
+.ea-root .status-good{color:var(--sage);font-weight:600;}
+.ea-root .status-warn{color:var(--brass);font-weight:600;}
+.ea-root .status-bad{color:var(--rust);font-weight:600;}
 
-  footer{margin-top:44px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint);}
+.ea-root .terms{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;align-self:stretch;}
+.ea-root .term{background:transparent;border:1px solid var(--line-soft);border-radius:3px;padding:8px 5px 7px;text-align:center;transition:border-color .3s ease;}
+.ea-root .term.paid{border-color:var(--card-accent, var(--brass));}
+.ea-root .term .t-lbl{font-size:9.5px;letter-spacing:.03em;color:var(--ink-faint);}
+.ea-root .term .t-count{font-size:15px;font-weight:600;color:var(--ink-faint);margin-bottom:2px;transition:color .3s ease;}
+.ea-root .term.paid .t-count{color:var(--card-accent, var(--brass));}
 
-  @media (max-width:900px){
-    .kpis{grid-template-columns:repeat(2,1fr);}
-    .charts-row{grid-template-columns:1fr;}
-  }
-  @media (max-width:640px){
-    .kpis{grid-template-columns:repeat(2,1fr);}
-    header{align-items:flex-start;}
-    header h1{font-size:28px;}
-  }
+@media (max-width:900px){ .ea-root .card{grid-template-columns:1fr;} }
+
+/* ---------- ledger-style tables ---------- */
+.ea-root .term-tag{font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:1px solid var(--brass);color:var(--brass);flex-shrink:0;}
+.ea-root .table-scroll{overflow-x:auto;}
+.ea-root .table-scroll-spaced{margin-top:16px;}
+.ea-root .ledger-table{width:100%;border-collapse:collapse;min-width:680px;font-size:13px;}
+.ea-root .ledger-table-wide{min-width:820px;}
+.ea-root .ledger-table th{text-align:right;padding:11px 10px;font-size:11px;font-weight:600;color:var(--ink-faint);border-bottom:1px solid var(--line);white-space:nowrap;}
+.ea-root .ledger-table th.col-left{text-align:left;}
+.ea-root .ledger-table td{padding:12px 10px;text-align:right;border-bottom:1px solid var(--line-soft);color:var(--ink-dim);}
+.ea-root .ledger-table td.col-left{text-align:left;}
+.ea-root .ledger-table tr:last-child td{border-bottom:none;}
+.ea-root .ledger-table .row-label{font-weight:600;color:var(--ink);}
+.ea-root .ledger-table tr.row-selected{background:var(--brass-soft);}
+.ea-root .ledger-table tr.row-selected td.row-label{color:var(--brass);}
+.ea-root .cell-paid{font-weight:700;color:var(--brass);}
+.ea-root .cell-rate{font-weight:700;color:var(--ink);}
+.ea-root .cell-strong{font-weight:600;color:var(--ink);}
+.ea-root .cell-share{font-weight:600;color:var(--sage);}
+.ea-root .row-overall{background:rgba(27,31,28,.03);}
+.ea-root .row-overall td{font-weight:700;color:var(--ink);}
+.ea-root .tech-name-cell{display:flex;align-items:center;gap:9px;}
+.ea-root .tech-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;}
+.ea-root .tech-name{font-weight:600;color:var(--ink);}
+
+.ea-root .stat-strip{margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));border-top:1px solid var(--line);}
+.ea-root .stat-block{padding:16px 4px 0;border-left:1px solid var(--line);padding-left:16px;}
+.ea-root .stat-block:first-child{border-left:none;padding-left:4px;}
+.ea-root .stat-label{font-size:10.5px;color:var(--ink-faint);}
+.ea-root .stat-value{margin-top:5px;font-family:var(--serif);font-size:21px;font-weight:600;color:var(--ink);}
+
+/* ---------- states ---------- */
+.ea-root .state-box{text-align:center;padding:70px 20px;color:var(--ink-dim);font-size:13.5px;border:1px dashed var(--line);border-radius:4px;}
+.ea-root .state-box.error{color:var(--rust);border-color:rgba(161,75,52,.4);}
+.ea-root .state-box-hint{color:var(--ink-faint);display:block;margin-top:10px;}
+.ea-root .skeleton{background:var(--bg-raised);border:1px solid var(--line);height:90px;position:relative;overflow:hidden;}
+.ea-root .grid .skeleton{border-top:1px solid var(--line);}
+.ea-root .grid .skeleton:first-child{border-top:none;}
+.ea-root .skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg, transparent, rgba(27,31,28,.05), transparent);animation:shimmer 1.4s infinite;}
+@keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+
+.ea-root footer{margin-top:48px;text-align:center;font-size:12px;color:var(--ink-faint);border-top:1px solid var(--line);padding-top:20px;}
+
+@media (prefers-reduced-motion: reduce){ .ea-root *{animation:none !important;transition:none !important;} }
+
+@media (max-width:1080px){
+  .ea-root .kpis{grid-template-columns:repeat(3,1fr);}
+  .ea-root .kpi:nth-child(4){border-left:none;}
+}
+@media (max-width:900px){
+  .ea-root .kpis{grid-template-columns:repeat(2,1fr);}
+  .ea-root .kpi:nth-child(3),.ea-root .kpi:nth-child(5){border-left:none;}
+  .ea-root .charts-row{grid-template-columns:1fr;}
+}
+@media (max-width:640px){
+  .ea-root .kpis{grid-template-columns:repeat(2,1fr);}
+  .ea-root header{align-items:flex-start;}
+  .ea-root header h1{font-size:28px;}
+  .ea-root .wrap{padding:32px 18px 60px;}
+}
 </style>
 </head>
 <body>
-<div class="aurora"></div>
-<div class="grain"></div>
-<div class="wrap">
 
-  <header>
-    <div class="title-block">
-      <p class="eyebrow"><span class="pulse-dot"></span>Live Enrollment Analytics</p>
-      <h1>Technology Batches</h1>
-      <div class="sub">Real-time seat capacity and term-payment tracking across active cohorts</div>
-    </div>
-    <div class="refresh-row">
-      <span>Updated <span id="lastUpdated">—</span></span>
-      <button class="btn" id="refreshBtn" onclick="loadData()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg>
-        Refresh
-      </button>
-    </div>
-  </header>
+<div class="ea-root">
+  <div class="ledger-lines"></div>
 
-  <div class="course-tabs" id="courseTabs"></div>
+  <div class="wrap">
 
-  <div class="kpis" id="kpis"></div>
+    <!-- ========================= HEADER ========================= -->
+    <header>
+      <div class="title-block">
+        <p class="eyebrow"><span class="pulse-dot"></span>Live Course Payment Analytics</p>
+        <h1 id="courseTitle">Course Analytics</h1>
+        <div class="sub">Course-wise registrations, technology distribution and term-payment tracking</div>
+        <div class="course-badge" id="courseBadge" style="display:none;"></div>
+      </div>
 
-  <div class="charts-row" id="chartsRow" style="display:none;">
-    <div class="panel" style="animation-delay:.05s">
-      <h2>Enrollment by Technology</h2>
-      <div class="panel-sub">Paid students vs. total seats per cohort</div>
-      <div class="chart-box"><canvas id="barChart"></canvas></div>
-    </div>
-    <div class="panel" style="animation-delay:.1s">
-      <h2>Overall Fill Rate</h2>
-      <div class="panel-sub">Share of seats currently occupied</div>
-      <div class="donut-wrap">
-        <div class="chart-box" style="height:150px;flex:1;"><canvas id="donutChart"></canvas></div>
-        <div class="donut-legend" id="donutLegend"></div>
+      <div class="refresh-row">
+        <span>Updated <span id="lastUpdated">—</span></span>
+        <button class="btn" id="refreshBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6" />
+          </svg>
+          <span id="refreshLabel">Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ========================= COURSE SELECTOR ========================= -->
+    <div class="term-selector" id="courseSelectorWrap">
+      <div class="term-selector-label">
+        <span class="term-selector-icon">C</span>
+        <div>
+          <div class="term-selector-title">Course</div>
+          <div class="term-selector-sub">Select a course to view its payment analytics</div>
+        </div>
+      </div>
+      <div class="course-selector-control">
+        <select class="course-select" id="courseSelect"></select>
       </div>
     </div>
-  </div>
 
-  <div class="section-head">
-    <h2>Cohort Breakdown</h2>
-    <span class="count-pill" id="countPill">— technologies</span>
-  </div>
-
-  <div id="content">
-    <div class="grid">
-      <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+    <!-- ========================= TERM SELECTOR ========================= -->
+    <div class="term-selector" id="termSelectorWrap" style="display:none;">
+      <div class="term-selector-label">
+        <span class="term-selector-icon">T</span>
+        <div>
+          <div class="term-selector-title">Payment Term</div>
+          <div class="term-selector-sub">View course analytics term-wise</div>
+        </div>
+      </div>
+      <div class="term-buttons" id="termButtons"></div>
     </div>
-  </div>
 
-  <footer>technology-dashboard · configure API_URL and COURSE_IDS below to go live</footer>
+    <!-- ========================= KPI STRIP ========================= -->
+    <div class="kpis" id="kpiContainer" style="display:none;"></div>
+
+    <!-- ========================= CHARTS ========================= -->
+    <div class="charts-row" id="chartsRow" style="display:none;">
+      <div class="panel">
+        <h2>Technology-wise Enrollment</h2>
+        <div class="panel-sub" id="barChartSub">Seats, registrations and term payments</div>
+        <div class="chart-box"><canvas id="barCanvas"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2 id="funnelTitle">Payment Funnel</h2>
+        <div class="panel-sub">Current registered and payment status</div>
+        <div class="donut-wrap">
+          <div class="chart-box" style="height:150px;flex:1;"><canvas id="donutCanvas"></canvas></div>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= TERM SUMMARY TABLE ========================= -->
+    <div id="termSummaryContainer" style="margin-top:22px;"></div>
+
+    <!-- ========================= TECHNOLOGY SECTION HEAD ========================= -->
+    <div class="section-head section-head-spaced">
+      <h2>Technology Breakdown</h2>
+      <span class="count-pill" id="techCountPill">— technologies</span>
+    </div>
+
+    <!-- ========================= STATE (loading / error / empty) ========================= -->
+    <div id="stateContainer"></div>
+
+    <!-- ========================= TECHNOLOGY CARDS ========================= -->
+    <div class="grid" id="techGrid" style="display:none;"></div>
+
+    <!-- ========================= TECHNOLOGY TABLE ========================= -->
+    <div id="techTableContainer" style="margin-top:24px;"></div>
+
+    <!-- ========================= FOOTER ========================= -->
+    <footer id="footer">course-payment-analytics</footer>
+
+  </div>
 </div>
 
 <script>
-/* =========================================================================
-   CONFIG — replace these with your real endpoint, icon host, and course ids.
-   ========================================================================= */
-const API_URL = "https://api.maya.adityauniversity.in/node/api/course-payment-analytics";     // <-- your live API endpoint
-const ICON_BASE_URL = (id) => `https://api.maya.adityauniversity.in/node/api/technology-icons/${id}`; // <-- base URL technology_icon filenames resolve against
-const COURSE_IDS = [
-  "66487408f07c5f0f567ee3c3",
-  "6a51d43add03c0ca536c473a",
-  "6a97b4d244c35b22f9d47f15"// <-- add as many course ids as you need here
-];
-/* ========================================================================= */
-/* ========================================================================= */
+(function(){
+"use strict";
 
-const ACCENTS = ["#4ee6a3", "#5eb1ff", "#ffb84d", "#8b7cf7", "#ff7a90", "#4ecdc4"];
-let barChart = null, donutChart = null;
-let courseData = [];      // [{course_id, course_name, technologies:[...]}, ...]
-let activeCourseIdx = 0;
+/* =========================================================================
+   CONFIGURATION — change these to point at a different backend / course set
+   ========================================================================= */
+const CONFIG = {
+  API_BASE_URL: "https://api.maya.adityauniversity.in/node/",
+  COURSE_IDS: [
+    "6a97b4d244c35b22f9d47f15"
+  ]
+};
+
+const API_URL = `${CONFIG.API_BASE_URL}course-payment-analytics`;
+
+const ACCENTS = ["#a9822c","#4f7d6c","#a14b34","#6b7fb3","#8a6d9c","#3f8f8a"];
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+const state = {
+  courses: [],              // [{course_id, course_name}]
+  courseDataCache: {},      // course_id -> last fetched analytics object
+  selectedCourseId: CONFIG.COURSE_IDS[0] || "",
+  selectedTerm: "",
+  availableTerms: [],
+  analyticsData: null,
+  status: "loading",        // loading | ready | error
+  loading: false,
+  error: null,
+  lastUpdated: "—",
+  charts: { bar: null, donut: null },
+  animations: {}
+};
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+function number(value){
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function percentage(value){
+  const n = number(value);
+  return `${n.toFixed(n % 1 === 0 ? 0 : 2)}%`;
+}
+
+function cleanTechnologyName(name){
+  return String(name || "")
+    .replace(/_\d{4}$/, "")
+    .replace(/_B\d+$/, "")
+    .trim();
+}
 
 function initials(name){
-  return name.replace(/_\d{4}$/, "").split(/[\s&]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+  return String(name || "")
+    .replace(/_\d{4}$/, "")
+    .split(/[\s&]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 }
 
-function animateCount(el, target, opts={}){
-  const dur = opts.duration || 950;
-  const isPct = !!opts.percent;
-  const t0 = performance.now();
-  function tick(now){
-    const p = Math.min(1, (now - t0) / dur);
-    const eased = 1 - Math.pow(1 - p, 3);
-    const val = Math.round(target * eased);
-    el.textContent = isPct ? val + "%" : val.toLocaleString();
-    if(p < 1) requestAnimationFrame(tick);
+function escapeHtml(str){
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function iconUrl(tech){
+  const icon = tech && tech.technology_icon;
+  if (!icon) return null;
+  return /^https?:\/\//i.test(icon) ? icon : `${CONFIG.API_BASE_URL}technology-icons/${icon}`;
+}
+
+function getAvailableTerms(courseData){
+  if (!courseData) return [];
+  if (Array.isArray(courseData.selected_terms) && courseData.selected_terms.length) {
+    return courseData.selected_terms;
   }
-  requestAnimationFrame(tick);
+  if (Array.isArray(courseData.overall_term_summary)) {
+    return courseData.overall_term_summary.map((t) => t.term_name).filter(Boolean);
+  }
+  return [];
 }
 
-function renderKPIs(rows){
-  const totalSeats = rows.reduce((s,r)=>s+(r.seats||0),0);
-  const totalPaid  = rows.reduce((s,r)=>s+(r.total_students_paid||0),0);
-  const avgFill = totalSeats ? Math.round((totalPaid/totalSeats)*100) : 0;
-  const openSeats = totalSeats - totalPaid;
+function findTermSummary(courseData, term){
+  return (courseData?.overall_term_summary || []).find(
+    (t) => String(t?.term_name) === String(term)
+  );
+}
 
-  const kpiDefs = [
-    { lbl:"Technologies", val: rows.length, glow:"rgba(94,177,255,.18)", foot: rows.length + " active cohorts" },
-    { lbl:"Total Seats", val: totalSeats, glow:"rgba(78,230,163,.18)", foot: "across all batches" },
-    { lbl:"Students Paid", val: totalPaid, glow:"rgba(255,184,77,.18)", foot: openSeats + " seats remaining" },
-    { lbl:"Avg. Fill Rate", val: avgFill, glow:"rgba(139,124,247,.18)", foot: "of total capacity", percent:true },
-  ];
+function mapErrorToMessage(err){
+  const msg = err && err.message ? String(err.message) : "";
+  if (msg === "HTTP_404") return "Course not found.";
+  if (msg === "HTTP_400") return "Invalid request. Please check your course and term selection.";
+  if (msg.startsWith("HTTP_5")) return "Unable to load payment analytics. Please try again shortly.";
+  if (msg.startsWith("HTTP_")) return "Unable to load payment analytics.";
+  if (msg === "INVALID_JSON") return "Received an invalid response from the server.";
+  if (msg === "EMPTY_RESPONSE" || msg === "NOT_FOUND") return "No course analytics data found.";
+  if (err instanceof TypeError) return "Network error. Please check your connection.";
+  return msg || "Unable to load payment analytics.";
+}
 
-  const kpis = document.getElementById("kpis");
-  kpis.innerHTML = kpiDefs.map((k,i)=>`
-    <div class="kpi" style="--kpi-glow:${k.glow};animation-delay:${i*0.07}s">
-      <div class="lbl">${k.lbl}</div>
-      <div class="num" id="kpi-${i}">0</div>
-      <div class="foot">${k.foot}</div>
-    </div>`).join("");
+/* =========================================================================
+   ANIMATED NUMBERS
+   ========================================================================= */
+function animateNumber(elId, targetValue, opts){
+  opts = opts || {};
+  const el = document.getElementById(elId);
+  if (!el) return;
 
-  kpiDefs.forEach((k,i)=>{
-    animateCount(document.getElementById(`kpi-${i}`), k.val, { percent: !!k.percent });
+  if (state.animations[elId]) {
+    cancelAnimationFrame(state.animations[elId]);
+    delete state.animations[elId];
+  }
+
+  const target = number(targetValue);
+  const duration = opts.duration || 950;
+  const percent = !!opts.percent;
+  const start = performance.now();
+
+  function tick(now){
+    const p = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const display = Math.round(target * eased);
+    el.textContent = percent ? `${display}%` : display.toLocaleString();
+
+    if (p < 1) {
+      state.animations[elId] = requestAnimationFrame(tick);
+    } else {
+      delete state.animations[elId];
+    }
+  }
+
+  state.animations[elId] = requestAnimationFrame(tick);
+}
+
+/* =========================================================================
+   API
+   ========================================================================= */
+async function apiRequest(courseIds, selectedTerms){
+  const body = { course_ids: courseIds };
+  if (selectedTerms && selectedTerms.length) {
+    body.selected_terms = selectedTerms;
+  }
+
+  let response;
+  try {
+    response = await fetch(API_URL, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+  } catch (networkErr) {
+    throw networkErr;
+  }
+
+  if (!response.ok) {
+    throw new Error(`HTTP_${response.status}`);
+  }
+
+  let json;
+  try {
+    json = await response.json();
+  } catch (parseErr) {
+    throw new Error("INVALID_JSON");
+  }
+
+  if (json && json.success === false) {
+    throw new Error(json.message || "API_ERROR");
+  }
+
+  return json;
+}
+
+/* =========================================================================
+   DATA LOADING
+   ========================================================================= */
+async function loadAllCourseNames(){
+  try {
+    const json = await apiRequest(CONFIG.COURSE_IDS);
+    const dataArr = Array.isArray(json && json.data) ? json.data : [];
+
+    state.courses = CONFIG.COURSE_IDS.map((id) => {
+      const found = dataArr.find((d) => String(d && d.course_id) === String(id));
+      return {
+        course_id: id,
+        course_name: (found && found.course_name) || `Course (${id.slice(0, 8)}…)`
+      };
+    });
+
+    state.courseDataCache = {};
+    dataArr.forEach((d) => {
+      if (d && d.course_id) state.courseDataCache[String(d.course_id)] = d;
+    });
+  } catch (err) {
+    console.error("Course Payment Analytics — loadAllCourseNames:", err);
+    state.courses = CONFIG.COURSE_IDS.map((id) => ({
+      course_id: id,
+      course_name: `Course (${id.slice(0, 8)}…)`
+    }));
+  }
+}
+
+async function loadAnalyticsForCourse(courseId, opts){
+  opts = opts || {};
+  state.loading = true;
+  renderAll();
+
+  try {
+    const termsToSend = opts.keepTerm && state.selectedTerm ? [state.selectedTerm] : undefined;
+    const json = await apiRequest([courseId], termsToSend);
+    const dataArr = Array.isArray(json && json.data) ? json.data : [];
+    const courseData =
+      dataArr.find((d) => String(d && d.course_id) === String(courseId)) || dataArr[0] || null;
+
+    if (!courseData) {
+      throw new Error("NOT_FOUND");
+    }
+
+    state.courseDataCache[String(courseId)] = courseData;
+    state.analyticsData = courseData;
+
+    const existing = state.courses.find((c) => String(c.course_id) === String(courseId));
+    if (existing && courseData.course_name) existing.course_name = courseData.course_name;
+
+    const terms = getAvailableTerms(courseData);
+    state.availableTerms = terms;
+
+    if (!opts.keepTerm || !terms.includes(state.selectedTerm)) {
+      state.selectedTerm = terms[0] || "";
+    }
+
+    state.lastUpdated = new Date().toLocaleTimeString();
+    state.error = null;
+    state.status = "ready";
+  } catch (err) {
+    console.error("Course Payment Analytics:", err);
+    state.analyticsData = null;
+    state.availableTerms = [];
+    state.error = mapErrorToMessage(err);
+    state.status = "error";
+  } finally {
+    state.loading = false;
+    renderAll();
+  }
+}
+
+async function selectCourse(courseId, opts){
+  opts = opts || {};
+
+  state.selectedCourseId = courseId;
+  state.selectedTerm = "";
+  state.analyticsData = null;
+  state.availableTerms = [];
+  state.error = null;
+  state.status = "loading";
+  state.loading = true;
+  renderAll();
+
+  if (opts.useCache && state.courseDataCache[String(courseId)]) {
+    const cached = state.courseDataCache[String(courseId)];
+    state.analyticsData = cached;
+    state.availableTerms = getAvailableTerms(cached);
+    state.selectedTerm = state.availableTerms[0] || "";
+    state.lastUpdated = new Date().toLocaleTimeString();
+    state.status = "ready";
+    state.loading = false;
+    renderAll();
+    return;
+  }
+
+  await loadAnalyticsForCourse(courseId);
+}
+
+function handleCourseChange(newCourseId){
+  if (String(newCourseId) === String(state.selectedCourseId)) return;
+  selectCourse(newCourseId, { useCache: false });
+}
+
+function handleTermChange(term){
+  if (term === state.selectedTerm) return;
+  state.selectedTerm = term;
+  renderAll();
+}
+
+function handleRefresh(){
+  if (state.loading) return;
+  loadAnalyticsForCourse(state.selectedCourseId, { keepTerm: true });
+}
+
+/* =========================================================================
+   RENDER — HEADER
+   ========================================================================= */
+function renderHeader(){
+  const course = state.analyticsData;
+
+  document.getElementById("courseTitle").textContent =
+    (course && course.course_name) || "Course Analytics";
+
+  const badge = document.getElementById("courseBadge");
+  if (state.status === "ready" && course) {
+    const registered =
+      number(course.overall && course.overall.registered_students) ||
+      number(course.total_course_registered);
+
+    badge.style.display = "inline-flex";
+    badge.innerHTML =
+      `Course ID <b style="margin-left:6px;">${escapeHtml(course.course_id || "")}</b>` +
+      `<span style="margin-left:12px;">·</span>` +
+      `<b style="margin-left:8px;">${registered.toLocaleString()}</b> total registered`;
+  } else {
+    badge.style.display = "none";
+  }
+
+  document.getElementById("lastUpdated").textContent = state.lastUpdated;
+
+  const refreshBtn = document.getElementById("refreshBtn");
+  const refreshLabel = document.getElementById("refreshLabel");
+  refreshBtn.disabled = state.loading;
+  refreshBtn.classList.toggle("spinning", state.loading);
+  refreshLabel.textContent = state.loading ? "Refreshing..." : "Refresh";
+}
+
+/* =========================================================================
+   RENDER — COURSE SELECTOR
+   ========================================================================= */
+function renderCourseSelector(){
+  const select = document.getElementById("courseSelect");
+  const currentValue = state.selectedCourseId;
+
+  select.innerHTML = state.courses
+    .map(
+      (c) =>
+        `<option value="${escapeHtml(c.course_id)}"${
+          String(c.course_id) === String(currentValue) ? " selected" : ""
+        }>${escapeHtml(c.course_name)}</option>`
+    )
+    .join("");
+
+  select.disabled = state.loading;
+  select.value = currentValue;
+
+  select.onchange = (e) => handleCourseChange(e.target.value);
+}
+
+/* =========================================================================
+   RENDER — TERM SELECTOR
+   ========================================================================= */
+function renderTermSelector(){
+  const wrap = document.getElementById("termSelectorWrap");
+  const container = document.getElementById("termButtons");
+
+  if (state.status !== "ready" || !state.availableTerms.length) {
+    wrap.style.display = "none";
+    return;
+  }
+
+  wrap.style.display = "flex";
+  container.innerHTML = state.availableTerms
+    .map(
+      (term) =>
+        `<button type="button" class="term-button${
+          term === state.selectedTerm ? " active" : ""
+        }" data-term="${escapeHtml(term)}">${escapeHtml(term)}</button>`
+    )
+    .join("");
+
+  container.querySelectorAll(".term-button").forEach((btn) => {
+    btn.addEventListener("click", () => handleTermChange(btn.getAttribute("data-term")));
   });
 }
 
-function renderCharts(rows){
-  const chartsRow = document.getElementById("chartsRow");
-  if(!rows.length){ chartsRow.style.display = "none"; return; }
-  chartsRow.style.display = "grid";
+/* =========================================================================
+   RENDER — KPI STRIP
+   ========================================================================= */
+function renderKPIs(){
+  const container = document.getElementById("kpiContainer");
+  const course = state.analyticsData;
 
-  const labels = rows.map(r => r.technology_name.replace(/_\d{4}$/, ""));
-  const paidData = rows.map(r => r.total_students_paid || 0);
-  const seatData = rows.map(r => r.seats || 0);
-  const colors = rows.map((_,i) => ACCENTS[i % ACCENTS.length]);
+  if (state.status !== "ready" || !course) {
+    container.style.display = "none";
+    container.innerHTML = "";
+    return;
+  }
 
-  if(barChart) barChart.destroy();
-  barChart = new Chart(document.getElementById("barChart"), {
+  container.style.display = "grid";
+
+  const technologies = course.technologies || [];
+  const registered =
+    number(course.overall && course.overall.registered_students) ||
+    number(course.total_course_registered);
+
+  const totalSeats = technologies.reduce((sum, t) => sum + number(t.seats), 0);
+  const termData = findTermSummary(course, state.selectedTerm);
+  const paid = number(termData && termData.paid_students);
+  const pending = number(termData && termData.pending_students);
+  const paymentPercentage = number(termData && termData.payment_percentage);
+  const registrationPercentage = totalSeats ? Math.round((registered / totalSeats) * 100) : 0;
+
+  const kpiDefs = [
+    { id: "kpi-tech", lbl: "Technologies", val: technologies.length,
+      foot: `${technologies.length} active technologies` },
+    { id: "kpi-seats", lbl: "Total Seats", val: totalSeats,
+      foot: "across all technologies" },
+    { id: "kpi-reg", lbl: "Registered", val: registered,
+      foot: `${registrationPercentage}% of total capacity` },
+    { id: "kpi-paid", lbl: `${state.selectedTerm} Paid`, val: paid,
+      foot: `${pending} students pending` },
+    { id: "kpi-pct", lbl: "Payment %", val: paymentPercentage,
+      foot: `${state.selectedTerm} collection status`, percent: true }
+  ];
+
+  container.innerHTML = kpiDefs
+    .map(
+      (k) => `
+      <div class="kpi">
+        <div class="lbl">${escapeHtml(k.lbl)}</div>
+        <div class="num" id="${k.id}">0</div>
+        <div class="foot">${escapeHtml(k.foot)}</div>
+      </div>`
+    )
+    .join("");
+
+  kpiDefs.forEach((k) => animateNumber(k.id, k.val, { percent: !!k.percent }));
+}
+
+/* =========================================================================
+   RENDER — CHARTS
+   ========================================================================= */
+function destroyCharts(){
+  if (state.charts.bar) { state.charts.bar.destroy(); state.charts.bar = null; }
+  if (state.charts.donut) { state.charts.donut.destroy(); state.charts.donut = null; }
+}
+
+function renderCharts(){
+  const row = document.getElementById("chartsRow");
+  const course = state.analyticsData;
+  const technologies = (course && course.technologies) || [];
+
+  if (state.status !== "ready" || !course || !technologies.length) {
+    row.style.display = "none";
+    destroyCharts();
+    return;
+  }
+
+  row.style.display = "grid";
+  document.getElementById("barChartSub").textContent =
+    `Seats, registrations and ${state.selectedTerm} payments`;
+  document.getElementById("funnelTitle").textContent = `${state.selectedTerm} Payment Funnel`;
+
+  const labels = technologies.map((t) => cleanTechnologyName(t.technology_name));
+  const registeredData = technologies.map((t) => number(t.registered_students));
+  const seatData = technologies.map((t) => number(t.seats));
+  const paidData = technologies.map((t) => {
+    const term = (t.terms || []).find((x) => String(x.term_name) === String(state.selectedTerm));
+    return number(term && term.paid_students);
+  });
+  const colors = technologies.map((_, i) => ACCENTS[i % ACCENTS.length]);
+
+  const totalRegistered =
+    number(course.overall && course.overall.registered_students) ||
+    number(course.total_course_registered);
+  const selectedTermData = findTermSummary(course, state.selectedTerm);
+  const totalPaid = number(selectedTermData && selectedTermData.paid_students);
+  const totalPending = number(selectedTermData && selectedTermData.pending_students);
+  const totalSeats = technologies.reduce((sum, t) => sum + number(t.seats), 0);
+  const openSeats = Math.max(0, totalSeats - totalRegistered);
+
+  destroyCharts();
+
+  const barCtx = document.getElementById("barCanvas");
+  state.charts.bar = new Chart(barCtx, {
     type: "bar",
     data: {
       labels,
       datasets: [
-        { label:"Seats", data:seatData, backgroundColor:"rgba(255,255,255,.06)", borderRadius:6, barThickness:16 },
-        { label:"Paid", data:paidData, backgroundColor:colors, borderRadius:6, barThickness:16 },
+        { label: "Seats", data: seatData, backgroundColor: "rgba(27,31,28,.08)", borderRadius: 4, barThickness: 13 },
+        { label: "Registered", data: registeredData, backgroundColor: "rgba(169,130,44,.35)", borderRadius: 4, barThickness: 13 },
+        { label: `${state.selectedTerm} Paid`, data: paidData, backgroundColor: colors, borderRadius: 4, barThickness: 13 }
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
-      animation:{ duration:950, easing:"easeOutCubic" },
-      plugins:{ legend:{ labels:{ color:"#8993a4", font:{ family:"Inter", size:11 }, boxWidth:10, boxHeight:10 } } },
-      scales:{
-        x:{ ticks:{ color:"#8993a4", font:{ size:10 }, maxRotation:0, autoSkip:true }, grid:{ display:false } },
-        y:{ ticks:{ color:"#8993a4", font:{ size:10 } }, grid:{ color:"rgba(255,255,255,.05)" }, beginAtZero:true }
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 950, easing: "easeOutCubic" },
+      plugins: {
+        legend: { labels: { color: "#5b6472", font: { family: "IBM Plex Sans", size: 11 }, boxWidth: 10, boxHeight: 10 } }
+      },
+      scales: {
+        x: { ticks: { color: "#5b6472", font: { size: 10 }, maxRotation: 0, autoSkip: true }, grid: { display: false } },
+        y: { ticks: { color: "#5b6472", font: { size: 10 } }, grid: { color: "rgba(27,31,28,.06)" }, beginAtZero: true }
       }
     }
   });
 
-  const totalSeats = seatData.reduce((a,b)=>a+b,0);
-  const totalPaid = paidData.reduce((a,b)=>a+b,0);
-  const remaining = Math.max(0, totalSeats - totalPaid);
-
-  if(donutChart) donutChart.destroy();
-  donutChart = new Chart(document.getElementById("donutChart"), {
-    type:"doughnut",
-    data:{
-      labels:["Paid", "Remaining"],
-      datasets:[{ data:[totalPaid, remaining], backgroundColor:["#4ee6a3", "rgba(255,255,255,.06)"], borderWidth:0, hoverOffset:4 }]
+  const donutCtx = document.getElementById("donutCanvas");
+  state.charts.donut = new Chart(donutCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Paid", "Registered, pending", "Open seats"],
+      datasets: [
+        {
+          data: [totalPaid, totalPending, openSeats],
+          backgroundColor: ["#a9822c", "#e0c48e", "rgba(27,31,28,.08)"],
+          borderWidth: 0,
+          hoverOffset: 4
+        }
+      ]
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      cutout:"72%",
-      animation:{ duration:1050, easing:"easeOutCubic" },
-      plugins:{ legend:{ display:false } }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "72%",
+      animation: { duration: 1050, easing: "easeOutCubic" },
+      plugins: { legend: { display: false } }
     }
   });
 
-  document.getElementById("donutLegend").innerHTML = `
-    <div class="legend-item"><span class="legend-dot" style="background:#4ee6a3"></span>Paid<b>${totalPaid}</b></div>
-    <div class="legend-item"><span class="legend-dot" style="background:rgba(255,255,255,.2)"></span>Remaining<b>${remaining}</b></div>
-    <div class="legend-item" style="margin-top:5px;border-top:1px solid var(--border-soft);padding-top:11px;">Total capacity<b>${totalSeats}</b></div>
+  const legend = document.getElementById("donutLegend");
+  legend.innerHTML = `
+    <div class="legend-item"><span class="legend-dot" style="background:#a9822c;"></span>${escapeHtml(state.selectedTerm)} Paid<b>${totalPaid}</b></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#e0c48e;"></span>Pending<b>${totalPending}</b></div>
+    <div class="legend-item"><span class="legend-dot" style="background:rgba(27,31,28,.15);"></span>Open seats<b>${openSeats}</b></div>
+    <div class="legend-item legend-total">Total capacity<b>${totalSeats}</b></div>
   `;
 }
 
-function cardHTML(tech, idx){
-  const accent = ACCENTS[idx % ACCENTS.length];
-  const fillPct = tech.seats ? Math.min(100, Math.round((tech.total_students_paid/tech.seats)*100)) : 0;
-  const iconUrl = tech.technology_icon
-    ? (/^https?:\/\//i.test(tech.technology_icon) ? tech.technology_icon : ICON_BASE_URL + tech.technology_icon)
-    : null;
-  const displayName = tech.technology_name.replace(/_\d{4}$/, "");
-  const cohortYear = (tech.technology_name.match(/_(\d{4})$/) || [])[1];
+/* =========================================================================
+   RENDER — TERM SUMMARY TABLE
+   ========================================================================= */
+function renderTermSummaryTable(){
+  const container = document.getElementById("termSummaryContainer");
+  const course = state.analyticsData;
+  const terms = (course && course.overall_term_summary) || [];
+  const technologies = (course && course.technologies) || [];
 
-  const termKeys = Object.keys(tech)
-    .filter(k => /^term_\d+_paid$/.test(k))
-    .sort((a,b) => (+a.match(/\d+/)[0]) - (+b.match(/\d+/)[0]));
-
-  const terms = termKeys.map(k=>{
-    const n = k.match(/\d+/)[0];
-    const count = tech[k] || 0;
-    return `<div class="term ${count > 0 ? "paid" : ""}"><div class="t-count">${count}</div><div class="t-lbl">T${n}</div></div>`;
-  }).join("");
-
-  return `
-  <div class="card" style="--card-accent:${accent};animation-delay:${idx*0.08}s">
-    <div class="card-head">
-      <div class="icon-box">
-        ${iconUrl
-          ? `<img src="${iconUrl}" alt="${displayName} icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-             <span class="fallback" style="display:none;">${initials(tech.technology_name)}</span>`
-          : `<span class="fallback">${initials(tech.technology_name)}</span>`
-        }
-      </div>
-      <div class="name-block">
-        <h3 title="${displayName}">${displayName}</h3>
-        <div class="tid">${cohortYear ? "Cohort " + cohortYear + " · " : ""}${tech.technology_id.slice(0,10)}…</div>
-      </div>
-    </div>
-
-    <div class="seat-row"><span>Seats filled</span><b>${tech.total_students_paid} / ${tech.seats}</b></div>
-    <div class="bar-track"><div class="bar-fill" data-fill="${fillPct}"></div></div>
-
-    <div class="terms" style="grid-template-columns:repeat(${termKeys.length || 4},1fr);">${terms}</div>
-  </div>`;
-}
-
-function renderGrid(rows){
-  const content = document.getElementById("content");
-  document.getElementById("countPill").textContent = rows.length + (rows.length === 1 ? " technology" : " technologies");
-  if(!rows.length){
-    content.innerHTML = `<div class="state-box">No technologies found.</div>`;
+  if (state.status !== "ready" || !course || !terms.length) {
+    container.innerHTML = "";
     return;
   }
-  content.innerHTML = `<div class="grid">${rows.map((r,i)=>cardHTML(r,i)).join("")}</div>`;
-  requestAnimationFrame(()=>{
-    document.querySelectorAll(".bar-fill").forEach(el=>{
-      const pct = el.getAttribute("data-fill");
-      requestAnimationFrame(()=>{ el.style.width = pct + "%"; });
-    });
-  });
+
+  const selectedTermData = findTermSummary(course, state.selectedTerm);
+
+  const rows = terms
+    .map((term) => {
+      const isSelected = String(term.term_name) === String(state.selectedTerm);
+      return `
+        <tr class="${isSelected ? "row-selected" : ""}">
+          <td class="col-left row-label">${escapeHtml(term.term_name)}</td>
+          <td>${number(term.registered_students).toLocaleString()}</td>
+          <td class="cell-paid">${number(term.paid_students).toLocaleString()}</td>
+          <td class="cell-strong">${number(term.pending_students).toLocaleString()}</td>
+          <td class="cell-rate">${percentage(term.payment_percentage)}</td>
+        </tr>`;
+    })
+    .join("");
+
+  container.innerHTML = `
+    <div class="panel">
+      <div class="panel-header-row">
+        <div>
+          <h2>Course Term-wise Analytics</h2>
+          <div class="panel-sub">Overall payment performance across all technologies</div>
+        </div>
+        <div class="term-tag">${escapeHtml(state.selectedTerm)}</div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th class="col-left">Term</th>
+              <th>Registered</th>
+              <th>Paid</th>
+              <th>Pending</th>
+              <th>Payment %</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+
+      <div class="stat-strip">
+        <div class="stat-block">
+          <div class="stat-label">SELECTED TERM PAID</div>
+          <div class="stat-value">${number(selectedTermData && selectedTermData.paid_students)}</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">SELECTED TERM PENDING</div>
+          <div class="stat-value">${number(selectedTermData && selectedTermData.pending_students)}</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">PAYMENT PERCENTAGE</div>
+          <div class="stat-value">${percentage(selectedTermData && selectedTermData.payment_percentage)}</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">TECHNOLOGIES</div>
+          <div class="stat-value">${technologies.length}</div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
-function renderTabs(){
-  const tabsEl = document.getElementById("courseTabs");
-  if(!courseData.length){ tabsEl.innerHTML = ""; return; }
-
-  tabsEl.innerHTML = courseData.map((c, i) => {
-    const accent = ACCENTS[i % ACCENTS.length];
-    const label = c.course_name || `Course ${c.course_id.slice(0,8)}…`;
-    const seatCount = (c.technologies || []).reduce((s,t)=>s+(t.total_students_paid||0),0);
-    return `
-      <div class="course-tab ${i === activeCourseIdx ? "active" : ""}" style="--tab-accent:${accent}" onclick="switchCourse(${i})">
-        ${label}
-        <span class="tab-pill">${seatCount} paid</span>
-      </div>`;
-  }).join("");
+/* =========================================================================
+   RENDER — TECHNOLOGY CARDS
+   ========================================================================= */
+function statusClass(pct){
+  if (pct >= 90) return "status-good";
+  if (pct >= 50) return "status-warn";
+  return "status-bad";
 }
 
-function switchCourse(idx){
-  activeCourseIdx = idx;
-  renderTabs();
-  renderActiveCourse();
-}
+function renderTechnologyCards(){
+  const grid = document.getElementById("techGrid");
+  const course = state.analyticsData;
+  const technologies = (course && course.technologies) || [];
 
-function renderActiveCourse(){
-  const course = courseData[activeCourseIdx];
-  const rows = course ? (course.technologies || []) : [];
-  renderKPIs(rows);
-  renderCharts(rows);
-  renderGrid(rows);
-}
-
-function renderSkeleton(){
-  document.getElementById("content").innerHTML = `<div class="grid">${"<div class='skeleton'></div>".repeat(6)}</div>`;
-  document.getElementById("kpis").innerHTML = "";
-  document.getElementById("chartsRow").style.display = "none";
-  document.getElementById("courseTabs").innerHTML = "";
-}
-
-function renderError(msg){
-  document.getElementById("content").innerHTML = `
-    <div class="state-box error">Couldn't load data — ${msg}<br><br>
-    <span style="color:var(--ink-dim)">Check that API_URL is set correctly and reachable from the browser (CORS enabled).</span>
-    </div>`;
-  document.getElementById("courseTabs").innerHTML = "";
-  document.getElementById("kpis").innerHTML = "";
-  document.getElementById("chartsRow").style.display = "none";
-}
-
-async function loadData(){
-  const btn = document.getElementById("refreshBtn");
-  btn.classList.add("spinning");
-  renderSkeleton();
-  try{
-    const url = `${API_URL}?course_ids=${COURSE_IDS.join(",")}`;
-    const res = await fetch(url, { headers: { "Accept": "application/json" } });
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-
-    // Supports the new multi-course response { data: [{course_id, course_name, technologies:[...]}] }
-    // and falls back gracefully to the old flat single-course shape { data: [...] }.
-    const raw = json.data || [];
-    if(raw.length && Array.isArray(raw[0].technologies)){
-      courseData = raw;
-    } else {
-      courseData = [{ course_id: COURSE_IDS[0] || "course", course_name: null, technologies: raw }];
-    }
-
-    if(activeCourseIdx >= courseData.length) activeCourseIdx = 0;
-
-    renderTabs();
-    renderActiveCourse();
-    document.getElementById("lastUpdated").textContent = new Date().toLocaleTimeString();
-  }catch(err){
-    console.error(err);
-    renderError(err.message || "unknown error");
-  }finally{
-    btn.classList.remove("spinning");
+  if (state.status !== "ready" || !technologies.length) {
+    grid.style.display = "none";
+    grid.innerHTML = "";
+    return;
   }
+
+  grid.style.display = "grid";
+
+  grid.innerHTML = technologies
+    .map((tech, idx) => {
+      const accent = ACCENTS[idx % ACCENTS.length];
+      const seats = number(tech.seats);
+      const registered = number(tech.registered_students);
+      const term = (tech.terms || []).find(
+        (t) => String(t.term_name) === String(state.selectedTerm)
+      );
+      const paid = number(term && term.paid_students);
+      const pending = number(term && term.pending_students);
+      const paymentPercentage = number(term && term.payment_percentage);
+
+      const registeredPct = seats ? Math.min(100, Math.round((registered / seats) * 100)) : 0;
+      const paidPct = seats ? Math.min(100, Math.round((paid / seats) * 100)) : 0;
+
+      const url = iconUrl(tech);
+      const displayName = cleanTechnologyName(tech.technology_name);
+      const cohortMatch = String(tech.technology_name || "").match(/_(\d{4})/);
+      const cohortYear = cohortMatch ? cohortMatch[1] : "";
+      const techIdShort = String(tech.technology_id || "").slice(0, 10);
+
+      const termsHtml = (tech.terms || [])
+        .map((t) => {
+          const count = number(t.paid_students);
+          const isSelected = String(t.term_name) === String(state.selectedTerm);
+          return `
+            <div class="term ${count > 0 ? "paid" : ""} ${isSelected ? "selected" : ""}">
+              <div class="t-count">${count}</div>
+              <div class="t-lbl">${escapeHtml(String(t.term_name || "").replace(/^Term\s*/i, "T"))}</div>
+            </div>`;
+        })
+        .join("");
+
+      const iconHtml = url
+        ? `<img src="${escapeHtml(url)}" alt="${escapeHtml(displayName)} icon" onerror="this.parentElement.innerHTML='<span class=&quot;fallback&quot;>${escapeHtml(initials(tech.technology_name))}</span>';" />`
+        : `<span class="fallback">${escapeHtml(initials(tech.technology_name))}</span>`;
+
+      return `
+        <div class="card" style="--card-accent:${accent};">
+          <div class="card-head">
+            <div class="icon-box">${iconHtml}</div>
+            <div>
+              <h3 title="${escapeHtml(displayName)}">${escapeHtml(displayName)}</h3>
+              <div class="tid">${cohortYear ? `Cohort ${cohortYear} · ` : ""}${escapeHtml(techIdShort)}…</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="seat-row"><span>Registered / Seats</span><b>${registered} / ${seats}</b></div>
+            <div class="bar-track">
+              <div class="bar-fill registered" style="width:${registeredPct}%;"></div>
+              <div class="bar-fill" style="width:${paidPct}%;"></div>
+            </div>
+            <div class="seat-row" style="margin-top:0;">
+              <span>${escapeHtml(state.selectedTerm)} Paid</span>
+              <b>${paid}<span class="of-tag">of ${registered} registered</span></b>
+            </div>
+            <div class="meta-row"><span class="meta-label">Pending</span><strong>${pending}</strong></div>
+            <div class="meta-row">
+              <span class="meta-label">Payment %</span>
+              <strong class="${statusClass(paymentPercentage)}">${percentage(paymentPercentage)}</strong>
+            </div>
+          </div>
+
+          <div class="terms" style="grid-template-columns:repeat(${Math.min((tech.terms || []).length || 1, 4)},1fr);">
+            ${termsHtml}
+          </div>
+        </div>`;
+    })
+    .join("");
 }
 
-loadData();
+/* =========================================================================
+   RENDER — TECHNOLOGY TABLE
+   ========================================================================= */
+function renderTechnologyTable(){
+  const container = document.getElementById("techTableContainer");
+  const course = state.analyticsData;
+  const technologies = (course && course.technologies) || [];
 
-// optional: auto-refresh every 30s — uncomment to enable
-// setInterval(loadData, 30000);
+  if (state.status !== "ready" || !technologies.length) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const rows = technologies
+    .map((tech, idx) => {
+      const term = (tech.terms || []).find(
+        (t) => String(t.term_name) === String(state.selectedTerm)
+      );
+      const registered = number(tech.registered_students);
+      const paid = number(term && term.paid_students);
+      const pending = number(term && term.pending_students);
+      const paymentPct = number(term && term.payment_percentage);
+      const share = number(term && term.share_percentage);
+
+      return `
+        <tr>
+          <td class="col-left">
+            <div class="tech-name-cell">
+              <span class="tech-dot" style="background:${ACCENTS[idx % ACCENTS.length]};"></span>
+              <span class="tech-name">${escapeHtml(cleanTechnologyName(tech.technology_name))}</span>
+            </div>
+          </td>
+          <td>${number(tech.seats)}</td>
+          <td class="cell-strong">${registered}</td>
+          <td class="cell-paid">${paid}</td>
+          <td class="cell-strong">${pending}</td>
+          <td class="cell-rate">${percentage(paymentPct)}</td>
+          <td class="cell-share">${percentage(share)}</td>
+        </tr>`;
+    })
+    .join("");
+
+  const overallTerm = findTermSummary(course, state.selectedTerm);
+  const totalSeats = technologies.reduce((sum, t) => sum + number(t.seats), 0);
+  const totalRegistered =
+    number(course.overall && course.overall.registered_students) ||
+    number(course.total_course_registered);
+
+  container.innerHTML = `
+    <div class="panel">
+      <h2>Technology-wise Analytics</h2>
+      <div class="panel-sub">${escapeHtml(state.selectedTerm)} payment performance by technology</div>
+
+      <div class="table-scroll table-scroll-spaced">
+        <table class="ledger-table ledger-table-wide">
+          <thead>
+            <tr>
+              <th class="col-left">Technology</th>
+              <th>Seats</th>
+              <th>Registered</th>
+              <th>${escapeHtml(state.selectedTerm)} Paid</th>
+              <th>${escapeHtml(state.selectedTerm)} Pending</th>
+              <th>Payment %</th>
+              <th>Share %</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+            <tr class="row-overall">
+              <td class="col-left">Overall</td>
+              <td>${totalSeats}</td>
+              <td>${totalRegistered}</td>
+              <td>${number(overallTerm && overallTerm.paid_students)}</td>
+              <td>${number(overallTerm && overallTerm.pending_students)}</td>
+              <td>${percentage(overallTerm && overallTerm.payment_percentage)}</td>
+              <td>100%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   RENDER — STATE BOX / SKELETON / COUNT PILL / FOOTER
+   ========================================================================= */
+function renderStateBox(){
+  const container = document.getElementById("stateContainer");
+  const pill = document.getElementById("techCountPill");
+  const course = state.analyticsData;
+  const technologies = (course && course.technologies) || [];
+
+  if (state.status === "loading") {
+    pill.textContent = "— technologies";
+    container.innerHTML = `
+      <div class="grid">
+        ${Array.from({ length: 6 }).map(() => `<div class="skeleton"></div>`).join("")}
+      </div>`;
+    return;
+  }
+
+  if (state.status === "error") {
+    pill.textContent = "— technologies";
+    container.innerHTML = `
+      <div class="state-box error">
+        Couldn't load course analytics — ${escapeHtml(state.error || "Unknown error")}
+        <span class="state-box-hint">Check the course ID, API URL and backend availability.</span>
+      </div>`;
+    return;
+  }
+
+  pill.textContent = `${technologies.length} ${technologies.length === 1 ? "technology" : "technologies"}`;
+
+  if (state.status === "ready" && technologies.length === 0) {
+    container.innerHTML = `<div class="state-box">No technologies found for this course.</div>`;
+    return;
+  }
+
+  container.innerHTML = "";
+}
+
+function renderFooter(){
+  const course = state.analyticsData;
+  const name = (course && course.course_name) || "Course";
+  const id = (course && course.course_id) || state.selectedCourseId;
+  document.getElementById("footer").textContent =
+    `course-payment-analytics · ${name} · Course ID: ${id}`;
+}
+
+/* =========================================================================
+   MAIN RENDER
+   ========================================================================= */
+function renderAll(){
+  renderHeader();
+  renderCourseSelector();
+  renderTermSelector();
+  renderKPIs();
+  renderCharts();
+  renderTermSummaryTable();
+  renderStateBox();
+  renderTechnologyCards();
+  renderTechnologyTable();
+  renderFooter();
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+async function init(){
+  document.getElementById("refreshBtn").addEventListener("click", handleRefresh);
+
+  await loadAllCourseNames();
+  renderCourseSelector();
+
+  if (!state.selectedCourseId) {
+    state.status = "error";
+    state.error = "No course ID is configured.";
+    renderAll();
+    return;
+  }
+
+  await selectCourse(state.selectedCourseId, { useCache: true });
+}
+
+init();
+
+})();
 </script>
 </body>
 </html>
